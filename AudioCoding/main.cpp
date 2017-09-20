@@ -7,7 +7,7 @@
 
 #define M_PI 3.141592654f
 
-#define WAV_FILE "data/train.wav"
+#define WAV_FILE "data/gong.wav"
 
 unsigned int g_windowWidth = 600;
 unsigned int g_windowHeight = 600;
@@ -68,6 +68,16 @@ void normalize(float* a, int size)
 	}
 }
 
+void printVector(float* a, int size)
+{
+	cout << "<";
+	for (int i = 0; i < size; i++)
+	{
+		cout << a[i] << ", ";
+	}
+	cout << ">" << endl;
+}
+
 void printMatrix(float* a, int width, int height)
 {
 	for (int h = 0; h < height; h++)
@@ -100,13 +110,28 @@ void InverseDCT(float* y, const float* x, const float* q, int size)
 	// TODO: part of Homework Task 1
 	// takes a vector x and produce as output a vector y where y = sum x_k * q_k
 
+	for (int k = 0; k < size; k++)
+	{
+		y[k] = 0;
+		//cout << endl;
+		for (int i = 0; i < size; i++)
+		{
+			y[k] += x[i] * q[k * size + i];
+			//cout << q[i * size + k] << ", ";
+		}
+		//cout << endl;
+	}
+	//printVector(y, 8);
 }
 
-void DCT(float* x, const float* y, const float* q, int size)
+void DCT(float* x, const float* y,  float* q, int size)
 {
 	// TODO: part of Homework Task 1
 	// takes a vector y and produce as output a vector x,  where the kth element of the vector can be computed from x_k = q_k * y
-	
+	for (int k = 0; k < size; k++)
+	{
+		x[k] = dotProduct(q + k * size, y, size);
+	}
 }
 
 void DCTvector(int N, int k, float* q)
@@ -315,9 +340,9 @@ void compressWAVSignal()
 
 	}
 	printMatrix(q, 8, 8);
-	q_t = transpose(q, 8, 8);
-	cout << endl;
-	printMatrix(q_t, 8, 8);
+	//q_t = transpose(q, 8, 8);
+	//cout << endl;
+	//printMatrix(q_t, 8, 8);
 
 
 	// processing data by 8
@@ -325,6 +350,7 @@ void compressWAVSignal()
 	{
 		// computes the Discrete Cosine Transform x
 		DCT(x, g_wav_data + i, q, 8);
+
 
 		// TODO: set last m element as zero
 		//inverse the Discrete Cosine Transform to g_compress_wav_data

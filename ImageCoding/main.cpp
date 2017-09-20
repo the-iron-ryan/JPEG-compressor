@@ -30,6 +30,11 @@ bool g_draw_origin = true;
 
 void CompressBlock(const float* A, float* B, int m)
 {
+	float *C = new float[8 * 8];
+
+	// m represents a particular frequency that we must zero out, we zero out if 
+	//    we get an x, y index of the matrix when added together that is > m
+
 	// TODO: Homework Task 2 (see the PDF description)
 
 }

@@ -104,24 +104,47 @@ float* transpose(float* a, int width, int height)
 	}
 	return a_t;
 }
+float * multiply(const float* a, float* b, int width, int height)
+{
+	float *mat = new float[width * height];
+	b = transpose(b, 8, 8);
+
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			float dot = dotProduct(a + i * height, b + j * height, 8);
+
+			if (abs(dot) < 0.0001)
+				dot = 0.0f;
+
+			mat[i * height + j] = dot;
+		}
+	}
+	return mat;
+}
 
 void InverseDCT(float* y, const float* x, const float* q, int size)
 {
 	// TODO: part of Homework Task 1
 	// takes a vector x and produce as output a vector y where y = sum x_k * q_k
 
+	//for (int k = 0; k < size; k++)
+	//{
+	//	y[k] = 0;
+	//	//cout << endl;
+	//	for (int i = 0; i < size; i++)
+	//	{
+	//		y[k] += x[i] * q[k * size + i];
+	//		//cout << q[i * size + k] << ", ";
+	//	}
+	//	//cout << endl;
+	//}
+	//printVector(y, 8);
 	for (int k = 0; k < size; k++)
 	{
-		y[k] = 0;
-		//cout << endl;
-		for (int i = 0; i < size; i++)
-		{
-			y[k] += x[i] * q[k * size + i];
-			//cout << q[i * size + k] << ", ";
-		}
-		//cout << endl;
+		y[k] = dotProduct(q + k * size, x, size);
 	}
-	//printVector(y, 8);
 }
 
 void DCT(float* x, const float* y,  float* q, int size)
@@ -339,11 +362,22 @@ void compressWAVSignal()
 		normalize(q + k * 8, 8);
 
 	}
-	printMatrix(q, 8, 8);
-	//q_t = transpose(q, 8, 8);
-	//cout << endl;
-	//printMatrix(q_t, 8, 8);
+	q_t = transpose(q, 8, 8);
 
+	cout << endl;
+	cout << "-------------------------MATRIX DATA-------------------------" << endl;
+
+	cout << "Q Matrix: " << endl;
+	printMatrix(q, 8, 8);
+	cout << endl;
+	cout << "Q_T Matrix: " << endl;
+	printMatrix(q_t, 8, 8);
+	cout << endl;
+	cout << "Q * Q_T Matrix: " << endl;
+	printMatrix(multiply(q, q_t, 8, 8), 8, 8);
+
+	cout << "-------------------------------------------------------------" << endl;
+	
 
 	// processing data by 8
 	for (int i = 0; i < g_wav_size; i += 8)

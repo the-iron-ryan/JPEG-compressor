@@ -129,22 +129,19 @@ void InverseDCT(float* y, const float* x, const float* q, int size)
 	// TODO: part of Homework Task 1
 	// takes a vector x and produce as output a vector y where y = sum x_k * q_k
 
-	//for (int k = 0; k < size; k++)
-	//{
-	//	y[k] = 0;
-	//	//cout << endl;
-	//	for (int i = 0; i < size; i++)
-	//	{
-	//		y[k] += x[i] * q[k * size + i];
-	//		//cout << q[i * size + k] << ", ";
-	//	}
-	//	//cout << endl;
-	//}
-	//printVector(y, 8);
 	for (int k = 0; k < size; k++)
 	{
-		y[k] = dotProduct(q + k * size, x, size);
+		y[k] = 0;
+		for (int i = 0; i < size; i++)
+		{
+			y[k] += x[i] * q[k * size + i];
+		}
 	}
+	//printVector(y, 8);
+	//for (int k = 0; k < size; k++)
+	//{
+	//	y[k] = dotProduct(q + k * size, x, size);
+	//}
 }
 
 void DCT(float* x, const float* y,  float* q, int size)

@@ -7,7 +7,7 @@
 
 #define M_PI 3.141592654f
 
-#define WAV_FILE "data/gong.wav"
+#define WAV_FILE "data/train.wav"
 
 unsigned int g_windowWidth = 600;
 unsigned int g_windowHeight = 600;
@@ -104,7 +104,7 @@ float* transpose(float* a, int width, int height)
 	}
 	return a_t;
 }
-float * multiply(const float* a, float* b, int width, int height)
+float* multiply(const float* a, float* b, int width, int height)
 {
 	float *mat = new float[width * height];
 	b = transpose(b, 8, 8);

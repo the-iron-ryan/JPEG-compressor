@@ -125,14 +125,14 @@ float* multiply(const float* a, float* b, int width, int height)
 	return mat;
 }
 
-void DCT(const float* imgBlockMat, float* dctMat, int u, int v, int m)
+void DCT(const float* imgBlockMat, float* dctMat, int u, int v, int m, int blockSize)
 {
 	// Zero out value
 	dctMat[v * 8 + u] = 0;
 
-	for (int y = 0; y < 8; y++)
+	for (int y = 0; y < blockSize; y++)
 	{
-		for (int x = 0; x < 8; x++)
+		for (int x = 0; x < blockSize; x++)
 		{
 			float c_u = 1.0f, c_v = 1.0f;
 
@@ -142,15 +142,27 @@ void DCT(const float* imgBlockMat, float* dctMat, int u, int v, int m)
 			if (v == 0)
 				c_v = 1.0f / sqrt(2.0f);
 
-			if (u + v <= m || m == 0)
-				dctMat[v * 8 + u] += 0.25f * c_u * c_v * imgBlockMat[y * 8 + x] * cos((u * M_PI) * (2.0f * x + 1.0f) / 16.0f) * cos((v * M_PI) * (2.0f * y + 1.0f) / 16.0f);
+			cout << endl;
+			cout << "img: " << endl;
+			printMatrix(imgBlockMat, 8, 8);
+			cout << endl;
+			cout << "before: " << endl;
+			printMatrix(dctMat, 8, 8);
+
+
+			//if (u + v <= m || m == 0)
+			dctMat[v * 8 + u] += 0.25f * c_u * c_v * imgBlockMat[y * blockSize + x] * cos((u * M_PI) * (2.0f * x + 1.0f) / 16.0f) * cos((v * M_PI) * (2.0f * y + 1.0f) / 16.0f);
+			cout << "Dct val " << dctMat[v * 8 + u] << endl;
+			cout << endl;
+			cout << "after: " << endl;
+			printMatrix(dctMat, 8, 8);
 		}
 	}
 
 }
-void IDCT(float* imgBlockMat, const float* dctMat, int x, int y)
+void IDCT(float* imgBlockMat, const float* dctMat, int x, int y, int blockSize)
 {
-	imgBlockMat[y * 8 + x] = 0;
+	imgBlockMat[y * blockSize + x] = 0;
 
 	for (int v = 0; v < 8; v++)
 	{
@@ -164,7 +176,7 @@ void IDCT(float* imgBlockMat, const float* dctMat, int x, int y)
 			if (v == 0)
 				c_v = 1.0f / sqrt(2.0f);
 
-			imgBlockMat[y * 8 + x] += 0.25f * c_u * c_v * dctMat[v * 8 + u] * cos((u * M_PI) * (2.0f * x + 1) / 16.0f) * cos((v * M_PI) * (2.0f * y + 1.0f) / 16.0f);
+			imgBlockMat[y * blockSize + x] += 0.25f * c_u * c_v * dctMat[v * 8 + u] * cos((u * M_PI) * (2.0f * x + 1) / 16.0f) * cos((v * M_PI) * (2.0f * y + 1.0f) / 16.0f);
 		}
 
 	}
@@ -227,12 +239,12 @@ void CompressBlockHaar(const float* A, float* &B, float compressionRatio)
 	B = multiply(H, multiply(AHH_t, H_t, 8, 8), 8, 8);
 }
 
-void CompressBlock(const float* A, float* B, int m)
+void CompressBlock(const float* A, float* B, int m, int blockSize)
 {
-	float *C = new float[8 * 8];
+	float *C = new float[blockSize * blockSize];
 
 	//cout << "Mat before DCT: " << endl;
-	//printMatrix(A, 8, 8);
+	//printMatrix(A, blockSize, blockSize);
 	//cout << endl;
 
 	// DCT
@@ -240,23 +252,23 @@ void CompressBlock(const float* A, float* B, int m)
 	{
 		for (int u = 0; u < 8; u++)
 		{
-			DCT(A, C, u, v, m);
+			DCT(A, C, u, v, m, blockSize);
 		}
 	}
-	//cout << "Mat after DCT: " << endl;
-	//printMatrix(C, 8, 8);
-	//cout << endl;
+	cout << "Mat after DCT: " << endl;
+	printMatrix(C, blockSize, blockSize);
+	cout << endl;
 
 	// IDCT
-	for (int y = 0; y < 8; y++)
+	for (int y = 0; y < blockSize; y++)
 	{
-		for (int x = 0; x < 8; x++)
+		for (int x = 0; x < blockSize; x++)
 		{
-			IDCT(B, C, x, y);
+			IDCT(B, C, x, y, blockSize);
 		}
 	}
 	//cout << "Mat after IDCT: " << endl;
-	//printMatrix(B, 8, 8);
+	//printMatrix(B, blockSize, blockSize);
 	//cout << endl;
 
 	// m represents a particular frequency that we must zero out, we zero out if 
@@ -274,7 +286,7 @@ void GrabBlock(const std::vector<float> &img, float *block, int x, int y, int wi
 	{
 		for (int w = x; w < x + width; w++)
 		{
-			block[i++] = img[h * g_image_width + w] -0.5f;
+			block[i++] = img[h * g_image_width + w];
 		}
 	}
 }
@@ -286,7 +298,7 @@ void PlaceBlock(std::vector<float> &img, const float *block, int x, int y, int w
 	{
 		for (int w = x; w < x + width; w++)
 		{
-			img[h * g_image_width + w] = block[i++] +0.5f;
+			img[h * g_image_width + w] = block[i++];
 		}
 	}
 }
@@ -303,19 +315,19 @@ void PrintImage(const vector<float> img)
 		cout << "]" << endl << endl;
 	}
 }
-void CompressImage(const std::vector<float> I, std::vector<float>& O, int m)
+void CompressImage(const std::vector<float> I, std::vector<float>& O, int m, int blockSize)
 {
-	for (int imgY = 0; imgY < g_image_height; imgY += 8)
+	for (int imgY = 0; imgY < g_image_height; imgY += blockSize)
 	{
-		for (int imgX = 0; imgX < g_image_width; imgX += 8)
+		for (int imgX = 0; imgX < g_image_width; imgX += blockSize)
 		{
-			float *block = new float[8 * 8];
-			float *compressedBlock = new float[8 * 8];
-			GrabBlock(I, block, imgX, imgY, 8, 8);
+			float *block = new float[blockSize * blockSize];
+			float *compressedBlock = new float[blockSize * blockSize];
+			GrabBlock(I, block, imgX, imgY, blockSize, blockSize);
 
-			CompressBlock(block, compressedBlock, m);
+			CompressBlock(block, compressedBlock, m, blockSize);
 
-			PlaceBlock(O, compressedBlock, imgX, imgY, 8, 8);
+			PlaceBlock(O, compressedBlock, imgX, imgY, blockSize, blockSize);
 		}
 	}
 }
@@ -574,7 +586,7 @@ void TestCompressBlock()
 
 	printMatrix(A, 8, 8);
 	cout << endl;
-	CompressBlock(A, B, 8);
+	CompressBlock(A, B, 8, 8);
 }
 void TestCompressBlockHaar()
 {
@@ -601,7 +613,7 @@ int main()
 
 
 	int n = 3;	// TODO: change the parameter n from 1 to 16 to see different image quality
-	CompressImage(g_luminance_data, g_compressed_luminance_data, n);	
+	CompressImage(g_luminance_data, g_compressed_luminance_data, n, 8);	
 	CompressImageHaar(g_luminance_data, g_haar_compressed_luminance_data, 0.25f);
 
 	writeImage();

@@ -1,6 +1,9 @@
 
 # Created by https://www.gitignore.io/api/c++,visualstudio
 
+ImageCoding/data/
+submission/
+
 ### C++ ###
 # Prerequisites
 *.d
